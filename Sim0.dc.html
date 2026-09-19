@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: #F7F5F0; color: #191A17; font-family: Archivo, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: #1F4436; text-decoration: none; }
+  a:hover { color: #142C23; text-decoration: underline; }
+  input, textarea, button, select { font-family: inherit; font-size: inherit; color: inherit; }
+  ::placeholder { color: #A8A296; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: #DCD8CE; border-radius: 6px; border: 3px solid #F7F5F0; }
+</style>
+</helmet>
+
+<div style="display: grid; grid-template-columns: 216px 1fr; min-height: 100vh; background: #F7F5F0;">
+
+  <nav style="border-right: 1px solid #DCD8CE; padding: 22px 0 24px; display: flex; flex-direction: column; gap: 28px; position: sticky; top: 0; height: 100vh; background: #F4F2EC;">
+    <div style="padding: 0 18px; display: flex; flex-direction: column; gap: 4px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="width: 18px; height: 18px; border: 1.5px solid #1F4436; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+          <div style="width: 6px; height: 6px; background: #1F4436; border-radius: 50%;"></div>
+        </div>
+        <span style="font-size: 15px; font-weight: 700; letter-spacing: -0.02em;">Sim0</span>
+      </div>
+      <span style="font-size: 10px; color: #8A8377; letter-spacing: 0.055em; text-transform: uppercase; padding-left: 26px; line-height: 1.4;">Simulate zero data debt</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 2px; padding: 0 10px;">
+      <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #A8A296; padding: 0 8px 7px;">Panel</div>
+      <button onClick="{{ goAgents }}" style="{{ navAgents }}" style-hover="background: #E8EFEA;">
+        <span>Agents</span>
+        <span style="font-variant-numeric: tabular-nums; font-size: 11px; color: #8A8377;">{{ cohortLabel }}</span>
+      </button>
+      <button onClick="{{ goInterview }}" style="{{ navInterview }}" style-hover="background: #E8EFEA;">
+        <span>Interview intake</span>
+      </button>
+      <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #A8A296; padding: 18px 8px 7px;">Simulate</div>
+      <button onClick="{{ goScenario }}" style="{{ navScenario }}" style-hover="background: #E8EFEA;">
+        <span>New scenario</span>
+      </button>
+      <button onClick="{{ goResults }}" style="{{ navReport }}" style-hover="background: #E8EFEA;">
+        <span>Results</span>
+        <span style="font-variant-numeric: tabular-nums; font-size: 11px; color: #8A8377;">4</span>
+      </button>
+    </div>
+
+    <div style="margin-top: auto; padding: 14px 18px 0; border-top: 1px solid #DCD8CE; display: flex; flex-direction: column; gap: 6px;">
+      <div style="font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #A8A296;">Engine</div>
+      <div style="display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: #6E6A60; line-height: 1.5;">
+        <div>claude-sonnet-4-5</div>
+        <div>text-embedding-3-small</div>
+        <div style="display: flex; justify-content: space-between; color: #8A8377;"><span>concurrency</span><span style="font-variant-numeric: tabular-nums;">{{ concurrency }}</span></div>
+      </div>
+    </div>
+  </nav>
+
+  <main style="min-width: 0; display: flex; flex-direction: column;">
+
+    <sc-if value="{{ isAgents }}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column;">
+        <header style="padding: 34px 40px 22px; border-bottom: 1px solid #DCD8CE; display: flex; align-items: flex-end; justify-content: space-between; gap: 32px;">
+          <div style="display: flex; flex-direction: column; gap: 7px; max-width: 560px;">
+            <h1 style="margin: 0; font-size: 27px; font-weight: 600; letter-spacing: -0.025em;">Agents</h1>
+            <p style="margin: 0; font-size: 13.5px; line-height: 1.55; color: #6E6A60; text-wrap: pretty;">Each agent is seeded from one interview transcript. Memories are embedded on intake; reflections are synthesized from the highest-importance memories.</p>
+          </div>
+          <div style="display: flex; gap: 26px; padding-bottom: 3px;">
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <span style="font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.02em;">{{ cohortLabel }}</span>
+              <span style="font-size: 10.5px; letter-spacing: 0.07em; text-transform: uppercase; color: #8A8377;">agents</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <span style="font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.02em;">{{ memoryTotal }}</span>
+              <span style="font-size: 10.5px; letter-spacing: 0.07em; text-transform: uppercase; color: #8A8377;">memories</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <span style="font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.02em;">{{ reflectionTotal }}</span>
+              <span style="font-size: 10.5px; letter-spacing: 0.07em; text-transform: uppercase; color: #8A8377;">reflections</span>
+            </div>
+          </div>
+        </header>
+
+        <div style="padding: 14px 40px; border-bottom: 1px solid #DCD8CE; display: flex; align-items: center; gap: 12px; background: #F4F2EC;">
+          <input value="{{ agentQuery }}" onChange="{{ onAgentQuery }}" placeholder="Filter by name, occupation, segment…" style="flex: 1; max-width: 320px; padding: 7px 11px; border: 1px solid #DCD8CE; border-radius: 5px; background: #FCFBF8; font-size: 13px; outline: none;" style-focus="border-color: #1F4436;" />
+          <div style="display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: #6E6A60;">
+            <span style="font-variant-numeric: tabular-nums; font-weight: 600; color: #191A17;">{{ selectedLabel }}</span>
+            <span>selected</span>
+          </div>
+          <button onClick="{{ selectAll }}" style="padding: 6px 11px; border: 1px solid #DCD8CE; background: transparent; border-radius: 5px; font-size: 12.5px; cursor: pointer;" style-hover="border-color: #1F4436; color: #1F4436;">Select all</button>
+          <button onClick="{{ clearSelection }}" style="padding: 6px 11px; border: 1px solid transparent; background: transparent; border-radius: 5px; font-size: 12.5px; color: #8A8377; cursor: pointer;" style-hover="color: #191A17;">Clear</button>
+          <button onClick="{{ goScenario }}" style="margin-left: auto; padding: 8px 15px; background: #1F4436; color: #F7F5F0; border: none; border-radius: 5px; font-size: 12.5px; font-weight: 600; cursor: pointer;" style-hover="background: #142C23;">Run a scenario →</button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 34px 1.4fr 1.5fr 0.9fr 88px 88px; padding: 9px 40px; border-bottom: 1px solid #DCD8CE; font-size: 10px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: #A8A296;">
+          <span></span><span>Agent</span><span>Profile</span><span>Segment</span><span style="text-align: right;">Obs.</span><span style="text-align: right;">Refl.</span>
+        </div>
+
+        <sc-for list="{{ visibleAgents }}" as="a" hint-placeholder-count="8">
+          <div onClick="{{ a.open }}" style="display: grid; grid-template-columns: 34px 1.4fr 1.5fr 0.9fr 88px 88px; align-items: center; padding: 13px 40px; border-bottom: 1px solid #E6E2D9; cursor: pointer; font-size: 13px;" style-hover="background: #F1EFE8;">
+            <div onClick="{{ a.toggle }}" style="{{ a.checkStyle }}">
+              <span style="font-size: 10px; color: #F7F5F0; line-height: 1;">{{ a.check }}</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+              <span style="font-weight: 600; letter-spacing: -0.01em;">{{ a.name }}</span>
+              <span style="font-size: 11px; color: #A8A296; font-variant-numeric: tabular-nums;">{{ a.interview }}</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0; color: #6E6A60; font-size: 12.5px;">
+              <span>{{ a.line1 }}</span>
+              <span style="font-size: 11.5px; color: #A8A296;">{{ a.line2 }}</span>
+            </div>
+            <div><span style="padding: 2px 8px; border-radius: 3px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; background: #EDEAE2; color: #4A463E; white-space: nowrap;">{{ a.segment }}</span></div>
+            <span style="text-align: right; font-variant-numeric: tabular-nums; color: #6E6A60;">{{ a.observations }}</span>
+            <span style="text-align: right; font-variant-numeric: tabular-nums; color: #6E6A60;">{{ a.reflections }}</span>
+          </div>
+        </sc-for>
+
+        <div style="padding: 18px 40px 40px; font-size: 12px; color: #A8A296;">Showing {{ visibleCount }} of {{ cohortLabel }}. <span style="color: #6E6A60;">Six agents have full transcripts loaded in this prototype.</span></div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isAgent }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column;">
+        <header style="padding: 22px 40px 20px; border-bottom: 1px solid #DCD8CE;">
+          <button onClick="{{ goAgents }}" style="background: none; border: none; padding: 0 0 12px; font-size: 12px; color: #8A8377; cursor: pointer;" style-hover="color: #1F4436;">← Agents</button>
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 40px;">
+            <div style="display: flex; flex-direction: column; gap: 9px; min-width: 0;">
+              <h1 style="margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.025em;">{{ agentName }}</h1>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                <sc-for list="{{ agentChips }}" as="c" hint-placeholder-count="5">
+                  <span style="padding: 3px 9px; border: 1px solid #DCD8CE; border-radius: 20px; font-size: 11.5px; color: #4A463E; background: #FCFBF8;">{{ c }}</span>
+                </sc-for>
+              </div>
+            </div>
+            <button onClick="{{ runReflect }}" style="padding: 8px 14px; border: 1px solid #1F4436; background: transparent; color: #1F4436; border-radius: 5px; font-size: 12.5px; font-weight: 600; cursor: pointer; flex-shrink: 0;" style-hover="background: #E8EFEA;">{{ reflectLabel }}</button>
+          </div>
+        </header>
+
+        <div style="display: grid; grid-template-columns: 1fr 300px; align-items: start;">
+          <div style="padding: 20px 34px 48px 40px; min-width: 0;">
+            <div style="display: flex; align-items: center; gap: 6px; padding-bottom: 16px;">
+              <sc-for list="{{ memTabs }}" as="t" hint-placeholder-count="4">
+                <button onClick="{{ t.select }}" style="{{ t.style }}">{{ t.label }}</button>
+              </sc-for>
+              <span style="margin-left: auto; font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; color: #A8A296;">sorted by importance</span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 1px; border: 1px solid #DCD8CE; border-radius: 7px; overflow: hidden; background: #DCD8CE;">
+              <sc-for list="{{ agentMemories }}" as="m" hint-placeholder-count="7">
+                <div style="background: #FCFBF8; padding: 13px 16px; display: grid; grid-template-columns: 26px 1fr 118px; gap: 14px; align-items: start;">
+                  <span style="{{ m.impStyle }}">{{ m.importance_score }}</span>
+                  <div style="display: flex; flex-direction: column; gap: 5px; min-width: 0;">
+                    <p style="margin: 0; font-size: 13.5px; line-height: 1.55; text-wrap: pretty;">{{ m.content }}</p>
+                    <span style="font-size: 10.5px; color: #A8A296; font-variant-numeric: tabular-nums;">#{{ m.id }} · {{ m.age }}</span>
+                  </div>
+                  <div style="display: flex; justify-content: flex-end; padding-top: 1px;">
+                    <span style="{{ m.typeStyle }}">{{ m.memory_type }}</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <aside style="border-left: 1px solid #DCD8CE; padding: 22px 40px 48px 24px; display: flex; flex-direction: column; gap: 26px; position: sticky; top: 0;">
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #A8A296;">Memory mix</div>
+              <div style="display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: #E6E2D9;">
+                <div style="width: {{ obsPct }}; background: #1F4436;"></div>
+                <div style="width: {{ reflPct }}; background: #7FA891;"></div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 5px; font-size: 12px; color: #6E6A60;">
+                <div style="display: flex; justify-content: space-between;"><span>Observations</span><span style="font-variant-numeric: tabular-nums; color: #191A17;">{{ agentObs }}</span></div>
+                <div style="display: flex; justify-content: space-between;"><span>Reflections</span><span style="font-variant-numeric: tabular-nums; color: #191A17;">{{ agentRefl }}</span></div>
+                <div style="display: flex; justify-content: space-between;"><span>Mean importance</span><span style="font-variant-numeric: tabular-nums; color: #191A17;">{{ agentMeanImp }}</span></div>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 9px;">
+              <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #A8A296;">Source</div>
+              <div style="display: flex; flex-direction: column; gap: 5px; font-size: 12px; color: #6E6A60; line-height: 1.5;">
+                <div>{{ agentInterview }}</div>
+                <div>{{ agentIntakeMode }}</div>
+                <div>{{ agentCreatedAt }}</div>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 9px;">
+              <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #A8A296;">Appears in</div>
+              <button onClick="{{ openRunForAgent }}" style="text-align: left; background: none; border: none; padding: 0; font-size: 12.5px; color: #1F4436; cursor: pointer; line-height: 1.45;" style-hover="text-decoration: underline;">{{ agentRunLabel }}</button>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isScenario }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; max-width: 1180px;">
+        <header style="padding: 34px 40px 22px; border-bottom: 1px solid #DCD8CE; display: flex; flex-direction: column; gap: 7px;">
+          <h1 style="margin: 0; font-size: 27px; font-weight: 600; letter-spacing: -0.025em;">New scenario</h1>
+          <p style="margin: 0; font-size: 13.5px; color: #6E6A60; max-width: 560px; line-height: 1.55;">Write the situation as the person would encounter it, not as a research question. Agents respond in first person.</p>
+        </header>
+
+        <div style="display: grid; grid-template-columns: 1fr 292px; align-items: start;">
+          <div style="padding: 24px 34px 48px 40px; display: flex; flex-direction: column; gap: 24px; min-width: 0;">
+            <div style="display: flex; flex-direction: column; gap: 9px;">
+              <label style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #A8A296;">Scenario type</label>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px;">
+                <sc-for list="{{ scenarioTypes }}" as="t" hint-placeholder-count="6">
+                  <button onClick="{{ t.select }}" style="{{ t.style }}">
+                    <span style="font-size: 12.5px; font-weight: 600;">{{ t.label }}</span>
+                    <span style="font-size: 11px; color: #8A8377; line-height: 1.4; text-align: left;">{{ t.hint }}</span>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #A8A296;">Name</label>
+              <input value="{{ scenarioName }}" onChange="{{ onScenarioName }}" style="padding: 9px 12px; border: 1px solid #DCD8CE; border-radius: 5px; background: #FCFBF8; font-size: 14px; outline: none;" style-focus="border-color: #1F4436;" />
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; align-items: baseline; justify-content: space-between;">
+                <label style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #A8A296;">Prompt</label>
+                <span style="font-size: 11px; color: #A8A296; font-variant-numeric: tabular-nums;">{{ promptChars }}</span>
+              </div>
+              <textarea value="{{ scenarioPrompt }}" onChange="{{ onScenarioPrompt }}" rows="8" style="padding: 13px 14px; border: 1px solid #DCD8CE; border-radius: 6px; background: #FCFBF8; font-size: 14px; line-height: 1.6; outline: none; resize: vertical;" style-focus="border-color: #1F4436;"></textarea>
+              <p style="margin: 0; font-size: 11.5px; color: #A8A296; line-height: 1.5;">This text is also the retrieval query — memories are ranked against it before the persona prompt is built.</p>
+            </div>
+          </div>
+
+          <aside style="border-left: 1px solid #DCD8CE; padding: 24px 40px 48px 24px; display: flex; flex-direction: column; gap: 22px; position: sticky; top: 0;">
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #A8A296;">Audience</div>
+              <div style="display: flex; flex-direction: column; gap: 5px;">
+                <sc-for list="{{ audienceOptions }}" as="o" hint-placeholder-count="3">
+                  <button onClick="{{ o.select }}" style="{{ o.style }}">
+                    <span>{{ o.label }}</span>
+                    <span style="font-variant-numeric: tabular-nums; font-size: 11.5px; color: #8A8377;">{{ o.count }}</span>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid #DCD8CE; border-radius: 7px; background: #FCFBF8;">
+              <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #A8A296;">Estimated</div>
+              <div style="display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; color: #6E6A60;">
+                <div style="display: flex; justify-content: space-between;"><span>Agents</span><span style="font-variant-numeric: tabular-nums; color: #191A17;">{{ runCount }}</span></div>
+                <div style="display: flex; justify-content: space-between;"><span>LLM calls</span><span style="font-variant-numeric: tabular-nums; color: #191A17;">{{ estCalls }}</span></div>
+                <div style="display: flex; justify-content: space-between;"><span>Wall clock</span><span style="font-variant-numeric: tabular-nums; color: #191A17;">{{ estTime }}</span></div>
+                <div style="display: flex; justify-content: space-between;"><span>Cost</span><span style="font-variant-numeric: tabular-nums; color: #191A17;">{{ estCost }}</span></div>
+              </div>
+            </div>
+
+            <button onClick="{{ startRun }}" style="padding: 11px 16px; background: #1F4436; color: #F7F5F0; border: none; border-radius: 6px; font-size: 13.5px; font-weight: 600; cursor: pointer;" style-hover="background: #142C23;">Run simulation</button>
+          </aside>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isRunning }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; padding: 60px 40px; gap: 34px;">
+        <div style="display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; max-width: 460px;">
+          <span style="font-size: 10.5px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #A8A296;">{{ runStageLabel }}</span>
+          <h1 style="margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.02em; text-wrap: pretty;">{{ scenarioName }}</h1>
+        </div>
+
+        <div style="width: 100%; max-width: 620px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; align-items: baseline; justify-content: space-between;">
+            <span style="font-size: 34px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.03em;">{{ progressDone }}</span>
+            <span style="font-size: 13px; color: #8A8377; font-variant-numeric: tabular-nums;">of {{ progressTotal }} agents</span>
+          </div>
+          <div style="height: 6px; background: #E6E2D9; border-radius: 3px; overflow: hidden;">
+            <div style="width: {{ progressPct }}; height: 100%; background: #1F4436; transition: width 200ms linear;"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 11.5px; color: #A8A296; font-variant-numeric: tabular-nums;">
+            <span>{{ progressRate }}</span>
+            <span>{{ progressEta }}</span>
+          </div>
+        </div>
+
+        <div style="width: 100%; max-width: 620px; display: flex; flex-direction: column; gap: 9px;">
+          <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #A8A296;">Workers</div>
+          <div style="display: grid; grid-template-columns: repeat({{ concurrency }}, 1fr); gap: 4px;">
+            <sc-for list="{{ workers }}" as="w" hint-placeholder-count="12">
+              <div style="{{ w.style }}"></div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="width: 100%; max-width: 620px; border-top: 1px solid #DCD8CE; padding-top: 14px; display: flex; flex-direction: column; gap: 7px; min-height: 118px;">
+          <sc-for list="{{ ticker }}" as="t" hint-placeholder-count="4">
+            <div style="{{ t.style }}">
+              <span style="font-variant-numeric: tabular-nums; color: #A8A296; font-size: 11.5px;">{{ t.time }}</span>
+              <span style="color: #4A463E;">{{ t.text }}</span>
+              <span style="font-variant-numeric: tabular-nums; color: #A8A296; font-size: 11.5px;">{{ t.meta }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isReport }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column;">
+        <header style="padding: 30px 40px 22px; border-bottom: 1px solid #DCD8CE; display: flex; align-items: flex-start; justify-content: space-between; gap: 40px;">
+          <div style="display: flex; flex-direction: column; gap: 9px; max-width: 640px;">
+            <button onClick="{{ goResults }}" style="align-self: flex-start; background: none; border: none; padding: 0; font-size: 10.5px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #A8A296; cursor: pointer;" style-hover="color: #1F4436;">← Aggregated report</button>
+            <h1 style="margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.025em; text-wrap: pretty;">{{ scenarioName }}</h1>
+            <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #6E6A60; text-wrap: pretty;">{{ scenarioPrompt }}</p>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 5px; font-size: 11.5px; color: #8A8377; text-align: right; flex-shrink: 0; font-variant-numeric: tabular-nums;">
+            <span>{{ reportRunLine }}</span>
+            <span>{{ reportTimeLine }}</span>
+            <span>{{ reportCostLine }}</span>
+          </div>
+        </header>
+
+        <div style="padding: 26px 40px 20px; border-bottom: 1px solid #DCD8CE; display: grid; grid-template-columns: 1.15fr 1fr; gap: 48px;">
+          <div style="display: flex; flex-direction: column; gap: 13px;">
+            <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #A8A296;">Sentiment distribution</div>
+            <div style="display: flex; height: 30px; border-radius: 5px; overflow: hidden;">
+              <sc-for list="{{ sentiments }}" as="s" hint-placeholder-count="3">
+                <div style="{{ s.barStyle }}">{{ s.pctLabel }}</div>
+              </sc-for>
+            </div>
+            <div style="display: flex; gap: 20px;">
+              <sc-for list="{{ sentiments }}" as="s" hint-placeholder-count="3">
+                <div style="display: flex; align-items: center; gap: 7px;">
+                  <div style="{{ s.dotStyle }}"></div>
+                  <span style="font-size: 12.5px; color: #4A463E; text-transform: capitalize;">{{ s.label }}</span>
+                  <span style="font-size: 12.5px; color: #8A8377; font-variant-numeric: tabular-nums;">{{ s.count }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 13px;">
+            <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #A8A296;">Notable quotes</div>
+            <div style="display: flex; flex-direction: column; gap: 11px;">
+              <sc-for list="{{ quotes }}" as="q" hint-placeholder-count="3">
+                <button onClick="{{ q.open }}" style="text-align: left; background: none; border: none; border-left: 2px solid #DCD8CE; padding: 0 0 0 13px; cursor: pointer; display: flex; flex-direction: column; gap: 4px;" style-hover="border-left-color: #1F4436;">
+                  <span style="font-size: 13px; line-height: 1.55; color: #191A17; text-wrap: pretty;">{{ q.text }}</span>
+                  <span style="font-size: 11px; color: #8A8377;">{{ q.attrib }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding: 26px 40px 8px; display: flex; flex-direction: column; gap: 15px;">
+          <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #A8A296;">Key themes</div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(258px, 1fr)); gap: 1px; background: #DCD8CE; border: 1px solid #DCD8CE; border-radius: 7px; overflow: hidden;">
+            <sc-for list="{{ themes }}" as="t" hint-placeholder-count="4">
+              <div style="background: #FCFBF8; padding: 17px 18px; display: flex; flex-direction: column; gap: 9px;">
+                <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px;">
+                  <span style="font-size: 14px; font-weight: 600; letter-spacing: -0.01em; text-wrap: pretty;">{{ t.label }}</span>
+                  <span style="font-size: 12px; color: #8A8377; font-variant-numeric: tabular-nums; flex-shrink: 0;">{{ t.agent_count }}</span>
+                </div>
+                <div style="height: 3px; background: #E6E2D9; border-radius: 2px; overflow: hidden;">
+                  <div style="width: {{ t.pct }}; height: 100%; background: #1F4436;"></div>
+                </div>
+                <p style="margin: 0; font-size: 12.5px; line-height: 1.55; color: #6E6A60; text-wrap: pretty;">{{ t.summary }}</p>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="padding: 30px 40px 48px; display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #A8A296;">Individual responses</div>
+            <div style="display: flex; gap: 5px;">
+              <sc-for list="{{ sentimentFilters }}" as="f" hint-placeholder-count="4">
+                <button onClick="{{ f.select }}" style="{{ f.style }}">{{ f.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 1px; background: #DCD8CE; border: 1px solid #DCD8CE; border-radius: 7px; overflow: hidden;">
+            <sc-for list="{{ responseRows }}" as="r" hint-placeholder-count="6">
+              <div onClick="{{ r.open }}" style="background: #FCFBF8; padding: 15px 18px; display: grid; grid-template-columns: 3px 168px 1fr 92px; gap: 16px; align-items: start; cursor: pointer;" style-hover="background: #F4F2EC;">
+                <div style="{{ r.railStyle }}"></div>
+                <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+                  <span style="font-size: 13px; font-weight: 600; letter-spacing: -0.01em;">{{ r.name }}</span>
+                  <span style="font-size: 11px; color: #A8A296;">{{ r.meta }}</span>
+                </div>
+                <p style="margin: 0; font-size: 13px; line-height: 1.55; color: #4A463E; text-wrap: pretty;">{{ r.excerpt }}</p>
+                <span style="font-size: 11px; color: #8A8377; text-align: right; font-variant-numeric: tabular-nums;">{{ r.memCount }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <span style="font-size: 12px; color: #A8A296;">Six of {{ progressTotal }} responses loaded in this prototype. Click any row for the memory trace.</span>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isRun }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column;">
+        <header style="padding: 22px 40px 20px; border-bottom: 1px solid #DCD8CE;">
+          <button onClick="{{ goReport }}" style="background: none; border: none; padding: 0 0 12px; font-size: 12px; color: #8A8377; cursor: pointer;" style-hover="color: #1F4436;">← {{ scenarioName }}</button>
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 32px;">
+            <div style="display: flex; flex-direction: column; gap: 7px;">
+              <h1 style="margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.025em;">{{ runName }}</h1>
+              <span style="font-size: 12.5px; color: #8A8377;">{{ runMeta }}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+              <span style="{{ runSentStyle }}">{{ runSentiment }}</span>
+              <button onClick="{{ openAgentFromRun }}" style="padding: 7px 13px; border: 1px solid #DCD8CE; background: transparent; border-radius: 5px; font-size: 12.5px; cursor: pointer;" style-hover="border-color: #1F4436; color: #1F4436;">Full memory store →</button>
+            </div>
+          </div>
+        </header>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; align-items: start;">
+          <div style="padding: 24px 32px 48px 40px; display: flex; flex-direction: column; gap: 20px; min-width: 0;">
+            <div style="display: flex; flex-direction: column; gap: 9px;">
+              <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #A8A296;">Response</div>
+              <p style="margin: 0; font-size: 16px; line-height: 1.7; letter-spacing: -0.005em; text-wrap: pretty;">{{ runResponse }}</p>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 9px; padding: 15px 16px; border: 1px solid #DCD8CE; border-radius: 7px; background: #FCFBF8;">
+              <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #A8A296;">Persona block sent to Claude</div>
+              <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; line-height: 1.6; color: #4A463E;">
+                <sc-for list="{{ runPersonaLines }}" as="l" hint-placeholder-count="5">
+                  <div>{{ l }}</div>
+                </sc-for>
+              </div>
+              <div style="font-size: 11.5px; color: #A8A296; padding-top: 4px; border-top: 1px solid #E6E2D9; font-variant-numeric: tabular-nums;">{{ runTokenLine }}</div>
+            </div>
+          </div>
+
+          <div style="border-left: 1px solid #DCD8CE; padding: 24px 40px 48px 32px; display: flex; flex-direction: column; gap: 14px; min-width: 0;">
+            <div style="display: flex; align-items: baseline; justify-content: space-between;">
+              <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #A8A296;">Memories retrieved</div>
+              <span style="font-size: 11px; color: #A8A296;">weighted score</span>
+            </div>
+
+            <sc-if value="{{ showScoreMath }}" hint-placeholder-val="{{ true }}">
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 11px 13px; border: 1px solid #DCD8CE; border-radius: 6px; background: #F1EFE8;">
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                  <span style="font-size: 10px; letter-spacing: 0.07em; text-transform: uppercase; color: #A8A296;">similarity</span>
+                  <span style="font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums;">× 1.0</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                  <span style="font-size: 10px; letter-spacing: 0.07em; text-transform: uppercase; color: #A8A296;">recency</span>
+                  <span style="font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums;">× 1.0</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                  <span style="font-size: 10px; letter-spacing: 0.07em; text-transform: uppercase; color: #A8A296;">importance</span>
+                  <span style="font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums;">× 1.0</span>
+                </div>
+              </div>
+            </sc-if>
+
+            <div style="display: flex; flex-direction: column; gap: 1px; background: #DCD8CE; border: 1px solid #DCD8CE; border-radius: 7px; overflow: hidden;">
+              <sc-for list="{{ runMemories }}" as="m" hint-placeholder-count="8">
+                <div style="background: #FCFBF8; padding: 13px 16px; display: flex; flex-direction: column; gap: 8px;">
+                  <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px;">
+                    <span style="font-size: 13px; line-height: 1.55; color: #191A17; text-wrap: pretty;">{{ m.content }}</span>
+                    <span style="font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; flex-shrink: 0;">{{ m.scoreLabel }}</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="flex: 1; display: flex; height: 4px; border-radius: 2px; overflow: hidden; background: #E6E2D9;">
+                      <div style="width: {{ m.simW }}; background: #1F4436;"></div>
+                      <div style="width: {{ m.recW }}; background: #7FA891;"></div>
+                      <div style="width: {{ m.impW }}; background: #C3D5C9;"></div>
+                    </div>
+                    <span style="font-size: 10.5px; color: #A8A296; font-variant-numeric: tabular-nums; flex-shrink: 0;">{{ m.breakdown }}</span>
+                  </div>
+                  <div style="display: flex; gap: 9px; align-items: center;">
+                    <span style="{{ m.typeStyle }}">{{ m.memory_type }}</span>
+                    <span style="font-size: 10.5px; color: #A8A296; font-variant-numeric: tabular-nums;">#{{ m.id }} · {{ m.age }} · imp {{ m.importance_score }}</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="display: flex; gap: 16px; padding-top: 4px;">
+              <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 8px; height: 8px; border-radius: 2px; background: #1F4436;"></div><span style="font-size: 11px; color: #8A8377;">similarity</span></div>
+              <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 8px; height: 8px; border-radius: 2px; background: #7FA891;"></div><span style="font-size: 11px; color: #8A8377;">recency</span></div>
+              <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 8px; height: 8px; border-radius: 2px; background: #C3D5C9;"></div><span style="font-size: 11px; color: #8A8377;">importance</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isInterview }}" hint-placeholder-val="{{ false }}">
+      <div style="display: grid; grid-template-columns: 1fr 268px; align-items: start; min-height: 100vh;">
+        <div style="display: flex; flex-direction: column; min-width: 0; min-height: 100vh;">
+          <header style="padding: 20px 40px; border-bottom: 1px solid #DCD8CE; display: flex; align-items: center; justify-content: space-between; gap: 24px;">
+            <div style="display: flex; flex-direction: column; gap: 3px;">
+              <span style="font-size: 15px; font-weight: 600; letter-spacing: -0.015em;">Hair color habits</span>
+              <span style="font-size: 11.5px; color: #8A8377;">20 questions · about 8 minutes</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 14px;">
+              <div style="display: flex; gap: 2px;">
+                <sc-for list="{{ interviewDots }}" as="d" hint-placeholder-count="20">
+                  <div style="{{ d.style }}"></div>
+                </sc-for>
+              </div>
+              <span style="font-size: 12px; color: #8A8377; font-variant-numeric: tabular-nums; flex-shrink: 0;">{{ interviewCounter }}</span>
+            </div>
+          </header>
+
+          <div style="flex: 1; padding: 28px 40px 20px; display: flex; flex-direction: column; gap: 18px; max-width: 720px; width: 100%;">
+            <sc-for list="{{ transcript }}" as="t" hint-placeholder-count="4">
+              <div style="{{ t.wrapStyle }}">
+                <span style="{{ t.roleStyle }}">{{ t.role }}</span>
+                <div style="{{ t.bubbleStyle }}">{{ t.text }}</div>
+              </div>
+            </sc-for>
+
+            <sc-if value="{{ interviewDone }}" hint-placeholder-val="{{ false }}">
+              <div style="padding: 20px; border: 1px solid #1F4436; border-radius: 8px; background: #E8EFEA; display: flex; flex-direction: column; gap: 12px;">
+                <span style="font-size: 15px; font-weight: 600;">{{ intakeHeadline }}</span>
+                <div style="display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; color: #2E4E3F; font-variant-numeric: tabular-nums;">
+                  <sc-for list="{{ intakeSteps }}" as="s" hint-placeholder-count="4">
+                    <div>{{ s }}</div>
+                  </sc-for>
+                </div>
+                <div style="display: flex; gap: 9px; padding-top: 2px;">
+                  <button onClick="{{ openNewAgent }}" style="padding: 8px 14px; background: #1F4436; color: #F7F5F0; border: none; border-radius: 5px; font-size: 12.5px; font-weight: 600; cursor: pointer;" style-hover="background: #142C23;">Open agent</button>
+                  <button onClick="{{ resetInterview }}" style="padding: 8px 14px; border: 1px solid #1F4436; background: transparent; color: #1F4436; border-radius: 5px; font-size: 12.5px; font-weight: 600; cursor: pointer;" style-hover="background: #DCE8E0;">Start another</button>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+
+          <sc-if value="{{ interviewActive }}" hint-placeholder-val="{{ true }}">
+            <div style="position: sticky; bottom: 0; border-top: 1px solid #DCD8CE; background: #F4F2EC; padding: 16px 40px 20px;">
+              <div style="max-width: 720px; display: flex; flex-direction: column; gap: 11px;">
+                <sc-if value="{{ hasChoices }}" hint-placeholder-val="{{ false }}">
+                  <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                    <sc-for list="{{ currentChoices }}" as="c" hint-placeholder-count="4">
+                      <button onClick="{{ c.pick }}" style="padding: 7px 13px; border: 1px solid #DCD8CE; background: #FCFBF8; border-radius: 20px; font-size: 12.5px; cursor: pointer;" style-hover="border-color: #1F4436; color: #1F4436;">{{ c.label }}</button>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <div style="display: flex; gap: 10px; align-items: flex-end;">
+                  <textarea value="{{ draft }}" onChange="{{ onDraft }}" onKeyDown="{{ onDraftKey }}" rows="2" placeholder="{{ inputHint }}" style="flex: 1; padding: 11px 13px; border: 1px solid #DCD8CE; border-radius: 6px; background: #FCFBF8; font-size: 14px; line-height: 1.55; outline: none; resize: none;" style-focus="border-color: #1F4436;"></textarea>
+                  <button onClick="{{ submitAnswer }}" style="padding: 11px 18px; background: #1F4436; color: #F7F5F0; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; flex-shrink: 0;" style-hover="background: #142C23;">{{ submitLabel }}</button>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+
+        <aside style="border-left: 1px solid #DCD8CE; padding: 20px 32px 40px 22px; display: flex; flex-direction: column; gap: 24px; position: sticky; top: 0; min-height: 100vh; background: #F4F2EC;">
+          <div style="display: flex; flex-direction: column; gap: 9px;">
+            <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #A8A296;">Intake mode</div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <sc-for list="{{ intakeModes }}" as="m" hint-placeholder-count="3">
+                <button onClick="{{ m.select }}" style="{{ m.style }}">{{ m.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 9px;">
+            <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #A8A296;">Sections</div>
+            <div style="display: flex; flex-direction: column; gap: 3px;">
+              <sc-for list="{{ sections }}" as="s" hint-placeholder-count="4">
+                <div style="{{ s.style }}">
+                  <span>{{ s.label }}</span>
+                  <span style="font-variant-numeric: tabular-nums; font-size: 11.5px;">{{ s.progress }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 9px; border-top: 1px solid #DCD8CE; padding-top: 18px;">
+            <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #A8A296;">Memories extracted</div>
+            <span style="font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.02em;">{{ extractedCount }}</span>
+            <p style="margin: 0; font-size: 11.5px; line-height: 1.55; color: #8A8377;">Answers are split on sentence boundaries so each fact is independently retrievable.</p>
+            <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 4px;">
+              <sc-for list="{{ extractedPreview }}" as="e" hint-placeholder-count="3">
+                <div style="display: flex; gap: 8px; align-items: baseline;">
+                  <span style="font-size: 10px; font-weight: 600; color: #1F4436; font-variant-numeric: tabular-nums; flex-shrink: 0; padding-top: 1px;">{{ e.imp }}</span>
+                  <span style="font-size: 11.5px; line-height: 1.5; color: #6E6A60; text-wrap: pretty;">{{ e.text }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isResults }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column;">
+        <header style="padding: 34px 40px 22px; border-bottom: 1px solid #DCD8CE; display: flex; align-items: flex-end; justify-content: space-between; gap: 32px;">
+          <div style="display: flex; flex-direction: column; gap: 7px; max-width: 560px;">
+            <h1 style="margin: 0; font-size: 27px; font-weight: 600; letter-spacing: -0.025em;">Results</h1>
+            <p style="margin: 0; font-size: 13.5px; line-height: 1.55; color: #6E6A60; text-wrap: pretty;">Every batch run against this cohort. Sentiment is the aggregation call's own classification, not a keyword pass.</p>
+          </div>
+          <button onClick="{{ goScenario }}" style="padding: 8px 15px; background: #1F4436; color: #F7F5F0; border: none; border-radius: 5px; font-size: 12.5px; font-weight: 600; cursor: pointer; flex-shrink: 0;" style-hover="background: #142C23;">New scenario</button>
+        </header>
+
+        <div style="display: grid; grid-template-columns: 1.6fr 132px 82px 200px 118px; padding: 9px 40px; border-bottom: 1px solid #DCD8CE; font-size: 10px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: #A8A296;">
+          <span>Scenario</span><span>Type</span><span style="text-align: right;">Agents</span><span style="padding-left: 24px;">Sentiment</span><span style="text-align: right;">Run</span>
+        </div>
+
+        <sc-for list="{{ pastRuns }}" as="r" hint-placeholder-count="4">
+          <div onClick="{{ r.open }}" style="display: grid; grid-template-columns: 1.6fr 132px 82px 200px 118px; align-items: center; padding: 15px 40px; border-bottom: 1px solid #E6E2D9; cursor: pointer; font-size: 13px;" style-hover="background: #F1EFE8;">
+            <div style="display: flex; flex-direction: column; gap: 3px; min-width: 0; padding-right: 24px;">
+              <span style="font-weight: 600; letter-spacing: -0.01em;">{{ r.name }}</span>
+              <span style="font-size: 11.5px; color: #A8A296; text-wrap: pretty;">{{ r.excerpt }}</span>
+            </div>
+            <div><span style="padding: 2px 8px; border-radius: 3px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; background: #EDEAE2; color: #4A463E; white-space: nowrap;">{{ r.type }}</span></div>
+            <span style="text-align: right; font-variant-numeric: tabular-nums; color: #6E6A60;">{{ r.agents }}</span>
+            <div style="padding-left: 24px; display: flex; flex-direction: column; gap: 5px;">
+              <div style="display: flex; height: 6px; border-radius: 3px; overflow: hidden;">
+                <div style="width: {{ r.posW }}; background: #1F4436;"></div>
+                <div style="width: {{ r.mixW }}; background: #B25E12;"></div>
+                <div style="width: {{ r.negW }}; background: #8C3A2E;"></div>
+              </div>
+              <span style="font-size: 11px; color: #A8A296; font-variant-numeric: tabular-nums;">{{ r.sentLabel }}</span>
+            </div>
+            <span style="text-align: right; font-size: 12px; color: #8A8377; font-variant-numeric: tabular-nums;">{{ r.when }}</span>
+          </div>
+        </sc-for>
+
+        <div style="padding: 18px 40px 40px; font-size: 12px; color: #A8A296;">One report is fully populated in this prototype.</div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isBulk }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; max-width: 1120px;">
+        <header style="padding: 22px 40px 20px; border-bottom: 1px solid #DCD8CE;">
+          <button onClick="{{ goInterview }}" style="background: none; border: none; padding: 0 0 12px; font-size: 12px; color: #8A8377; cursor: pointer;" style-hover="color: #1F4436;">← Interview intake</button>
+          <div style="display: flex; flex-direction: column; gap: 7px; max-width: 580px;">
+            <h1 style="margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.025em;">Bulk transcript upload</h1>
+            <p style="margin: 0; font-size: 13.5px; line-height: 1.55; color: #6E6A60; text-wrap: pretty;">One agent per transcript. Sim0 maps each speaker turn to the closest question in the fixed set, then splits answers into observation memories.</p>
+          </div>
+        </header>
+
+        <div style="display: grid; grid-template-columns: 1fr 292px; align-items: start;">
+          <div style="padding: 24px 34px 48px 40px; display: flex; flex-direction: column; gap: 22px; min-width: 0;">
+            <div style="border: 1.5px dashed #C9C4B8; border-radius: 8px; background: #FCFBF8; padding: 30px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center;">
+              <span style="font-size: 14.5px; font-weight: 600;">Drop transcripts here</span>
+              <span style="font-size: 12.5px; color: #8A8377; line-height: 1.5; max-width: 340px; text-wrap: pretty;">.txt, .docx, .vtt or a .csv with one row per respondent. Speaker labels are detected automatically.</span>
+              <button onClick="{{ addBatch }}" style="margin-top: 6px; padding: 8px 14px; border: 1px solid #1F4436; background: transparent; color: #1F4436; border-radius: 5px; font-size: 12.5px; font-weight: 600; cursor: pointer;" style-hover="background: #E8EFEA;">{{ addBatchLabel }}</button>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 1px; background: #DCD8CE; border: 1px solid #DCD8CE; border-radius: 7px; overflow: hidden;">
+              <div style="background: #F1EFE8; padding: 9px 16px; display: grid; grid-template-columns: 1.5fr 78px 96px 1fr; gap: 14px; font-size: 10px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: #A8A296;">
+                <span>File</span><span style="text-align: right;">Turns</span><span style="text-align: right;">Mapped</span><span>Status</span>
+              </div>
+              <sc-for list="{{ bulkFiles }}" as="f" hint-placeholder-count="5">
+                <div style="background: #FCFBF8; padding: 12px 16px; display: grid; grid-template-columns: 1.5fr 78px 96px 1fr; gap: 14px; align-items: center; font-size: 13px;">
+                  <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+                    <span style="font-weight: 500;">{{ f.name }}</span>
+                    <span style="font-size: 11px; color: #A8A296;">{{ f.size }}</span>
+                  </div>
+                  <span style="text-align: right; font-variant-numeric: tabular-nums; color: #6E6A60;">{{ f.turns }}</span>
+                  <span style="text-align: right; font-variant-numeric: tabular-nums; color: #6E6A60;">{{ f.mapped }}</span>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="{{ f.statusStyle }}">{{ f.status }}</span>
+                    <span style="font-size: 11.5px; color: #A8A296; text-wrap: pretty;">{{ f.note }}</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+
+            <p style="margin: 0; font-size: 11.5px; color: #A8A296; line-height: 1.5;">Unmapped turns are still embedded as observations — they just carry no question context, so importance scoring runs on the raw text.</p>
+          </div>
+
+          <aside style="border-left: 1px solid #DCD8CE; padding: 24px 40px 48px 24px; display: flex; flex-direction: column; gap: 22px; position: sticky; top: 0;">
+            <div style="display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid #DCD8CE; border-radius: 7px; background: #FCFBF8;">
+              <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #A8A296;">This batch</div>
+              <div style="display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; color: #6E6A60;">
+                <div style="display: flex; justify-content: space-between;"><span>Transcripts</span><span style="font-variant-numeric: tabular-nums; color: #191A17;">{{ bulkCount }}</span></div>
+                <div style="display: flex; justify-content: space-between;"><span>Agents to create</span><span style="font-variant-numeric: tabular-nums; color: #191A17;">{{ bulkReady }}</span></div>
+                <div style="display: flex; justify-content: space-between;"><span>Est. memories</span><span style="font-variant-numeric: tabular-nums; color: #191A17;">{{ bulkMemories }}</span></div>
+                <div style="display: flex; justify-content: space-between;"><span>Embedding calls</span><span style="font-variant-numeric: tabular-nums; color: #191A17;">{{ bulkEmbedCalls }}</span></div>
+                <div style="display: flex; justify-content: space-between;"><span>Cost</span><span style="font-variant-numeric: tabular-nums; color: #191A17;">{{ bulkCost }}</span></div>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 9px;">
+              <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #A8A296;">On ingest</div>
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <sc-for list="{{ ingestToggles }}" as="t" hint-placeholder-count="3">
+                  <button onClick="{{ t.toggle }}" style="{{ t.style }}">
+                    <span style="{{ t.boxStyle }}">{{ t.check }}</span>
+                    <span style="text-align: left; line-height: 1.4;">{{ t.label }}</span>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+
+            <button onClick="{{ ingestBatch }}" style="padding: 11px 16px; background: #1F4436; color: #F7F5F0; border: none; border-radius: 6px; font-size: 13.5px; font-weight: 600; cursor: pointer;" style-hover="background: #142C23;">{{ ingestLabel }}</button>
+          </aside>
+        </div>
+      </div>
+    </sc-if>
+
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;cohortSize&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:500,&quot;min&quot;:10,&quot;max&quot;:5000,&quot;step&quot;:10,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Cohort&quot;},&quot;concurrency&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:12,&quot;min&quot;:4,&quot;max&quot;:32,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Engine&quot;},&quot;defaultScenarioType&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;product&quot;,&quot;options&quot;:[&quot;product&quot;,&quot;pricing&quot;,&quot;messaging&quot;,&quot;features&quot;,&quot;churn&quot;,&quot;free&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;},&quot;showScoreMath&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Explainability&quot;}}">
+const SENT = { positive: "#1F4436", mixed: "#B25E12", negative: "#8C3A2E" };
+
+const pill = (bg, fg) =>
+  "padding: 2px 8px; border-radius: 3px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap; background: " + bg + "; color: " + fg + ";";
+
+const TYPE_PILL = {
+  observation: pill("#EDEAE2", "#6E6A60"),
+  reflection: pill("#E8EFEA", "#1F4436"),
+  plan: pill("#F5EADF", "#B25E12"),
+};
+
+const SCENARIO_TYPES = [
+  { id: "product", label: "New product", hint: "Concept reaction and purchase intent" },
+  { id: "pricing", label: "Pricing change", hint: "Willingness to pay, switching risk" },
+  { id: "messaging", label: "Messaging test", hint: "Which claim lands, which reads false" },
+  { id: "features", label: "Feature priority", hint: "Forced trade-offs between benefits" },
+  { id: "churn", label: "Churn reaction", hint: "Response to a change they didn't ask for" },
+  { id: "free", label: "Free-form", hint: "Write the situation yourself" },
+];
+
+const SECTIONS = [
+  { id: "demographics", label: "Demographics", count: 6 },
+  { id: "values", label: "Values", count: 4 },
+  { id: "purchase", label: "Purchase history", count: 4 },
+  { id: "category", label: "Hair color", count: 6 },
+];
+
+const QUESTIONS = [
+  { s: 0, q: "First, what should we call you?", hint: "Your first name is fine" },
+  { s: 0, q: "How old are you?" },
+  { s: 0, q: "Where do you live?", hint: "City and state" },
+  { s: 0, q: "What do you do for work?" },
+  { s: 0, q: "Who else is in your household?", choices: ["Live alone", "Partner", "Partner + kids", "Roommates", "Family home"] },
+  { s: 0, q: "Roughly what's your household income?", choices: ["Under $40k", "$40-70k", "$70-100k", "$100-150k", "$150k+", "Prefer not to say"] },
+  { s: 1, q: "Think about the last thing you spent money on that felt worth it. What was it, and why?", hint: "Take your time" },
+  { s: 1, q: "When you're choosing between two similar products, what usually decides it?" },
+  { s: 1, q: "Whose opinion do you actually trust when you're deciding what to buy?" },
+  { s: 1, q: "How do you feel about trying something new versus sticking with what works?" },
+  { s: 2, q: "Walk me through the last few things you bought for yourself. Where did you buy them?" },
+  { s: 2, q: "Where do you usually shop for personal care?", choices: ["Drugstore", "Target / Walmart", "Amazon", "Ulta / Sephora", "Salon", "Subscription"] },
+  { s: 2, q: "Tell me about a time you paid more than you meant to, and a time you walked away over price." },
+  { s: 2, q: "Is there a brand you buy without thinking? What earned that?" },
+  { s: 3, q: "How do you handle hair color right now? Salon, at home, both, or not at all?" },
+  { s: 3, q: "How often, and what does one round cost you?" },
+  { s: 3, q: "What's the most annoying part of it?" },
+  { s: 3, q: "How much attention do you pay to what's actually in it?" },
+  { s: 3, q: "What would make you switch to a different brand?" },
+  { s: 3, q: "What would make you rule a product out completely?" },
+];
+
+const SEEDED = ["Dana", "34", "Sacramento, CA", "Dental hygienist", "Partner + kids", "$70-100k",
+  "A really good mattress. I put it off for two years and then slept through the night for the first time in ages. Things I use every single day are worth overpaying for."];
+
+const EXTRACTS = [
+  { imp: 8, text: "Dana overpays willingly for items used daily, citing a mattress she deferred for two years." },
+  { imp: 6, text: "Dana frames purchase value by frequency of use rather than price." },
+  { imp: 4, text: "Dana lives with a partner and children in Sacramento, CA." },
+];
+
+const AGENTS = [
+  { id: 1, name: "Dana Whitfield", interview: "seed-001", intake: "Researcher transcribing", created: "Jul 12, 2026",
+    line1: "34 · Dental hygienist", line2: "Sacramento, CA · $70-100k", segment: "Box-dye loyal", obs: 31, refl: 4, meanImp: "6.4",
+    chips: ["34", "Sacramento, CA", "Dental hygienist", "Partner + kids", "$70-100k", "Colors at home every 6-8 weeks"],
+    sentiment: "mixed",
+    response: "Honestly the no-smell part is what caught my attention, not the salon claim. I plan my color day around that smell — windows open, nobody home, the whole thing. Nineteen dollars is nearly double what I pay and I've been buying the same ash brown for years, so it would take more than a box promise. If it showed up on sale, or if someone at work told me theirs came out even, I'd try one and see how the back of my head looked.",
+    persona: ["Name: Dana Whitfield", "Age: 34 · Sacramento, CA", "Occupation: dental hygienist", "Household: partner + kids · $70-100k", "Hair: naturally dark brown, colors at home every 6-8 weeks"],
+    tokens: "1,284 prompt tokens · 12 memories · 148 completion · 2.4s",
+    mem: [
+      { id: 118, c: "Dana said the dye smell gives her a headache for a full day, so she schedules coloring for a Saturday when nobody is home.", t: "observation", imp: 9, age: "3w ago", sim: 0.81, rec: 0.72 },
+      { id: 204, c: "Dana treats at-home color as a fixed household routine rather than a discretionary purchase, and disruptions cost her more than money.", t: "reflection", imp: 8, age: "6d ago", sim: 0.68, rec: 0.94 },
+      { id: 121, c: "Dana said she would pay maybe five dollars more for something that didn't wreck her bathroom for a day.", t: "observation", imp: 9, age: "3w ago", sim: 0.77, rec: 0.72 },
+      { id: 112, c: "Dana said she uses box dye from Target, usually the same ash brown she has bought for years.", t: "observation", imp: 8, age: "3w ago", sim: 0.74, rec: 0.72 },
+      { id: 114, c: "Dana said salon color looked incredible but was almost two hundred dollars each time and she couldn't justify repeating it.", t: "observation", imp: 8, age: "3w ago", sim: 0.71, rec: 0.72 },
+      { id: 122, c: "Dana said she doesn't trust ads for this category at all, but would try a brand if a friend at work showed her hers looked good.", t: "observation", imp: 9, age: "3w ago", sim: 0.62, rec: 0.72 },
+      { id: 205, c: "Dana's brand switching is gated on in-person social proof; marketing claims move her almost not at all.", t: "reflection", imp: 8, age: "6d ago", sim: 0.59, rec: 0.94 },
+      { id: 119, c: "Dana said she worries about a patchy result at the back of her head where she can't see.", t: "observation", imp: 7, age: "3w ago", sim: 0.55, rec: 0.72 },
+    ] },
+  { id: 2, name: "Marisol Reyes", interview: "batch-a-014", intake: "Bulk transcript upload", created: "Jul 14, 2026",
+    line1: "27 · Barista, part-time student", line2: "Austin, TX · $40-70k", segment: "Experimenter", obs: 26, refl: 3, meanImp: "5.9",
+    chips: ["27", "Austin, TX", "Barista + student", "Roommates", "$40-70k", "Changes color every few months"],
+    sentiment: "positive",
+    response: "Yes, I'd buy this. I change my color constantly and the smell is the reason I do it in the kitchen with a fan pointed at me. Nineteen is fine — I already spend more than that on the bleach plus the toner plus the mask, so if this is one box I'm probably saving. The grey coverage claim is irrelevant to me but I don't mind it being there.",
+    persona: ["Name: Marisol Reyes", "Age: 27 · Austin, TX", "Occupation: barista, part-time student", "Household: roommates · $40-70k", "Hair: bleached and toned, changes color every 2-3 months"],
+    tokens: "1,196 prompt tokens · 12 memories · 121 completion · 2.1s",
+    mem: [
+      { id: 341, c: "Marisol said she changes her hair color every two or three months and treats it as part of how she presents herself.", t: "observation", imp: 9, age: "3w ago", sim: 0.84, rec: 0.72 },
+      { id: 402, c: "Marisol spends on appearance as identity expression, and evaluates cost across a whole routine rather than per product.", t: "reflection", imp: 8, age: "5d ago", sim: 0.73, rec: 0.95 },
+      { id: 349, c: "Marisol said she does color in the kitchen with a fan pointed at her because of the fumes.", t: "observation", imp: 7, age: "3w ago", sim: 0.79, rec: 0.72 },
+      { id: 352, c: "Marisol said she buys bleach, toner and a repair mask separately and it adds up to more than a single box.", t: "observation", imp: 8, age: "3w ago", sim: 0.70, rec: 0.72 },
+      { id: 355, c: "Marisol said grey coverage means nothing to her at her age.", t: "observation", imp: 5, age: "3w ago", sim: 0.66, rec: 0.72 },
+      { id: 358, c: "Marisol said she'll try almost any new product once if the price is under twenty-five dollars.", t: "observation", imp: 8, age: "3w ago", sim: 0.64, rec: 0.72 },
+    ] },
+  { id: 3, name: "Priya Raghavan", interview: "batch-a-031", intake: "Bulk transcript upload", created: "Jul 14, 2026",
+    line1: "41 · Software manager", line2: "Seattle, WA · $150k+", segment: "Salon regular", obs: 29, refl: 4, meanImp: "6.8",
+    chips: ["41", "Seattle, WA", "Software manager", "Partner", "$150k+", "Salon every 8 weeks"],
+    sentiment: "negative",
+    response: "I don't see myself in this. I go to the same colorist every eight weeks and I'm paying for her judgment, not the chemistry — she corrects what my greys do at the temples, which a box can't. If anything, a product that promises salon results at the drugstore makes me trust it less. The ammonia-free part is table stakes at this point.",
+    persona: ["Name: Priya Raghavan", "Age: 41 · Seattle, WA", "Occupation: software engineering manager", "Household: partner · $150k+", "Hair: salon color every 8 weeks, grey at temples"],
+    tokens: "1,241 prompt tokens · 12 memories · 116 completion · 2.2s",
+    mem: [
+      { id: 511, c: "Priya said she has used the same colorist for six years and books eight weeks out.", t: "observation", imp: 9, age: "3w ago", sim: 0.80, rec: 0.72 },
+      { id: 604, c: "Priya buys expertise and relationship continuity rather than product attributes, which makes her structurally hard to convert with claims.", t: "reflection", imp: 9, age: "4d ago", sim: 0.75, rec: 0.96 },
+      { id: 517, c: "Priya said her greys come in unevenly at the temples and need handling differently each time.", t: "observation", imp: 8, age: "3w ago", sim: 0.72, rec: 0.72 },
+      { id: 521, c: "Priya said drugstore products claiming salon results are a red flag to her.", t: "observation", imp: 8, age: "3w ago", sim: 0.69, rec: 0.72 },
+      { id: 524, c: "Priya said she stopped noticing ammonia-free labels because everything says it now.", t: "observation", imp: 6, age: "3w ago", sim: 0.67, rec: 0.72 },
+    ] },
+  { id: 4, name: "Robert Osei", interview: "batch-b-007", intake: "Self-serve respondent", created: "Jul 19, 2026",
+    line1: "52 · Regional sales", line2: "Charlotte, NC · $100-150k", segment: "Grey coverage", obs: 24, refl: 3, meanImp: "6.1",
+    chips: ["52", "Charlotte, NC", "Regional sales", "Partner + kids", "$100-150k", "Covers grey monthly"],
+    sentiment: "positive",
+    response: "The smell thing matters more than you'd think — I do this in the guest bathroom before client trips and my wife can tell from the hallway. If it actually covers grey at the sideburns I'd pay nineteen without blinking; I've spent more than that on worse. What I'd want to know is whether it looks natural or that flat shoe-polish black that men's dye usually gives you.",
+    persona: ["Name: Robert Osei", "Age: 52 · Charlotte, NC", "Occupation: regional sales director", "Household: partner + kids · $100-150k", "Hair: covers grey roughly monthly, dark brown"],
+    tokens: "1,158 prompt tokens · 12 memories · 132 completion · 2.0s",
+    mem: [
+      { id: 712, c: "Robert said he colors his hair before client trips because looking younger affects how buyers treat him.", t: "observation", imp: 10, age: "2w ago", sim: 0.78, rec: 0.81 },
+      { id: 801, c: "Robert's grooming spend is a professional expense in his mind, so price sensitivity is low but performance tolerance is narrow.", t: "reflection", imp: 9, age: "4d ago", sim: 0.74, rec: 0.96 },
+      { id: 718, c: "Robert said men's dye usually comes out a flat shoe-polish black that looks obviously dyed.", t: "observation", imp: 8, age: "2w ago", sim: 0.76, rec: 0.81 },
+      { id: 722, c: "Robert said he does it in the guest bathroom and his wife can smell it from the hallway.", t: "observation", imp: 6, age: "2w ago", sim: 0.71, rec: 0.81 },
+      { id: 725, c: "Robert said he has spent more than twenty dollars on products that did not work.", t: "observation", imp: 7, age: "2w ago", sim: 0.63, rec: 0.81 },
+    ] },
+  { id: 5, name: "Kelsey Lundgren", interview: "batch-b-022", intake: "Self-serve respondent", created: "Jul 19, 2026",
+    line1: "29 · Veterinary tech", line2: "Minneapolis, MN · $40-70k", segment: "Price-first", obs: 22, refl: 3, meanImp: "5.5",
+    chips: ["29", "Minneapolis, MN", "Veterinary tech", "Lives alone", "$40-70k", "Box dye, cheapest option"],
+    sentiment: "negative",
+    response: "Nineteen for a box of dye is a no from me. I buy whatever's on the endcap under ten dollars and it's been fine for years. I get that the smell is unpleasant but it's twenty minutes of my life. If it were on a buy-one-get-one I might look, but at that price I'd rather put the difference toward my dog's dental.",
+    persona: ["Name: Kelsey Lundgren", "Age: 29 · Minneapolis, MN", "Occupation: veterinary technician", "Household: lives alone · $40-70k", "Hair: box color, buys whatever is cheapest"],
+    tokens: "1,102 prompt tokens · 11 memories · 108 completion · 1.9s",
+    mem: [
+      { id: 908, c: "Kelsey said she buys whatever hair color is on the endcap under ten dollars.", t: "observation", imp: 9, age: "2w ago", sim: 0.83, rec: 0.81 },
+      { id: 1001, c: "Kelsey allocates discretionary money against a short list of higher-priority obligations, so category upgrades lose by default.", t: "reflection", imp: 8, age: "3d ago", sim: 0.70, rec: 0.97 },
+      { id: 914, c: "Kelsey said she tolerates the smell because it's only twenty minutes.", t: "observation", imp: 6, age: "2w ago", sim: 0.72, rec: 0.81 },
+      { id: 919, c: "Kelsey said she spends on her dog's veterinary care before anything for herself.", t: "observation", imp: 8, age: "2w ago", sim: 0.51, rec: 0.81 },
+      { id: 923, c: "Kelsey said buy-one-get-one is the only promotion that changes what she picks up.", t: "observation", imp: 7, age: "2w ago", sim: 0.61, rec: 0.81 },
+    ] },
+  { id: 6, name: "Ana Beatriz Costa", interview: "batch-c-003", intake: "Researcher transcribing", created: "Jul 26, 2026",
+    line1: "36 · Freelance photographer", line2: "Miami, FL · $70-100k", segment: "Ingredient-led", obs: 28, refl: 4, meanImp: "6.6",
+    chips: ["36", "Miami, FL", "Freelance photographer", "Partner", "$70-100k", "Ammonia-free after a reaction"],
+    sentiment: "mixed",
+    response: "I want to believe this but I'd need the ingredient list before the price matters. I moved to ammonia-free after my scalp reacted badly, and half the brands that say no ammonia just use a different alkalizer that does the same thing to me. If the label is clean I'd pay nineteen easily. If it's vague, no price makes it worth another bad reaction.",
+    persona: ["Name: Ana Beatriz Costa", "Age: 36 · Miami, FL", "Occupation: freelance photographer", "Household: partner · $70-100k", "Hair: ammonia-free color after an allergic reaction"],
+    tokens: "1,213 prompt tokens · 12 memories · 127 completion · 2.3s",
+    mem: [
+      { id: 1108, c: "Ana said she switched to ammonia-free color after her scalp reacted badly to a product.", t: "observation", imp: 10, age: "1w ago", sim: 0.86, rec: 0.90 },
+      { id: 1201, c: "Ana screens products on ingredient transparency before price or performance, a direct consequence of her allergic reaction.", t: "reflection", imp: 9, age: "2d ago", sim: 0.79, rec: 0.98 },
+      { id: 1114, c: "Ana said many ammonia-free brands substitute another alkalizer that affects her the same way.", t: "observation", imp: 9, age: "1w ago", sim: 0.81, rec: 0.90 },
+      { id: 1119, c: "Ana said she reads the full ingredient list before buying anything that touches her scalp.", t: "observation", imp: 8, age: "1w ago", sim: 0.74, rec: 0.90 },
+      { id: 1124, c: "Ana said a vague label is a reason to put a product back on the shelf.", t: "observation", imp: 8, age: "1w ago", sim: 0.68, rec: 0.90 },
+    ] },
+];
+
+const EXTRA = [
+  { id: 7, name: "Trevor Nakamura", interview: "batch-c-018", line1: "45 · High school teacher", line2: "Portland, OR · $70-100k", segment: "Grey coverage", obs: 25, refl: 3 },
+  { id: 8, name: "Sharon Delacroix", interview: "batch-c-041", line1: "58 · Retired nurse", line2: "Tampa, FL · $40-70k", segment: "Salon regular", obs: 30, refl: 4 },
+  { id: 9, name: "Imani Brooks", interview: "batch-d-002", line1: "31 · Marketing coordinator", line2: "Atlanta, GA · $70-100k", segment: "Experimenter", obs: 27, refl: 4 },
+  { id: 10, name: "Joel Farkas", interview: "batch-d-016", line1: "38 · Line cook", line2: "Chicago, IL · Under $40k", segment: "Price-first", obs: 21, refl: 2 },
+  { id: 11, name: "Wendy Halvorsen", interview: "batch-d-029", line1: "49 · Office manager", line2: "Boise, ID · $70-100k", segment: "Box-dye loyal", obs: 26, refl: 3 },
+  { id: 12, name: "Nadia Toure", interview: "batch-e-005", line1: "24 · Graduate student", line2: "Providence, RI · Under $40k", segment: "Ingredient-led", obs: 23, refl: 3 },
+  { id: 13, name: "Bill Petrakis", interview: "batch-e-020", line1: "61 · Contractor", line2: "Reno, NV · $100-150k", segment: "Grey coverage", obs: 22, refl: 2 },
+  { id: 14, name: "Carmen Ilic", interview: "batch-e-033", line1: "43 · Hair stylist", line2: "Queens, NY · $70-100k", segment: "Salon regular", obs: 33, refl: 5 },
+];
+
+const THEMES = [
+  { label: "Odor is the real switching lever", n: 208, summary: "Agents raise smell before efficacy — it dictates when and where they can color at all. The strongest single hook in the concept." },
+  { label: "$19 breaks the box-dye price frame", n: 171, summary: "Habitual box buyers anchor at $8-11 and treat $19 as a different category. Most need social proof or a promotion to cross it." },
+  { label: "\u201CSalon-level\u201D reduces credibility", n: 94, summary: "Salon regulars and ingredient-led agents cite the claim as a reason to distrust the product. It works on lapsed salon users only." },
+  { label: "Ammonia-free no longer differentiates", n: 76, summary: "Agents report the label is on everything, and the ingredient-sensitive ones want the actual alkalizer named instead." },
+  { label: "Grey coverage carries job stakes", n: 61, summary: "Older working agents treat coverage as job-related and are price-insensitive, but intolerant of an unnatural result." },
+];
+
+const SENT_COUNTS = { positive: 187, mixed: 214, negative: 99 };
+
+const QUOTES = [
+  { id: 1, text: "\u201CI plan my color day around that smell — windows open, nobody home, the whole thing.\u201D", attrib: "Dana Whitfield · 34 · box-dye loyal" },
+  { id: 5, text: "\u201CNineteen for a box of dye is a no from me. I buy whatever's on the endcap under ten dollars.\u201D", attrib: "Kelsey Lundgren · 29 · price-first" },
+  { id: 3, text: "\u201CA product that promises salon results at the drugstore makes me trust it less.\u201D", attrib: "Priya Raghavan · 41 · salon regular" },
+  { id: 6, text: "\u201CIf the label is clean I'd pay nineteen easily. If it's vague, no price makes it worth another bad reaction.\u201D", attrib: "Ana Beatriz Costa · 36 · ingredient-led" },
+];
+
+const DEFAULT_PROMPT = "A brand you know from the drugstore is launching an ammonia-free permanent hair color with no chemical smell, at $18.99 versus the $9.99 box you buy today. It claims salon-level grey coverage. What do you think, and would you buy it on your next trip?";
+
+const TICKER = ["retrieved 12 memories", "response stored", "retrieved 11 memories", "response stored", "retrieved 12 memories", "response stored"];
+
+const PAST_RUNS = [
+  { id: "r1", name: "Ammonia-free premium launch", type: "New product", agents: 500, pos: 187, mix: 214, neg: 99, when: "2h ago", live: true,
+    excerpt: "$18.99 ammonia-free permanent color, no chemical smell, salon-level grey coverage." },
+  { id: "r2", name: "Drop the 2-pack, raise single to $12.49", type: "Pricing", agents: 500, pos: 71, mix: 168, neg: 261, when: "Yesterday",
+    excerpt: "Existing box goes from $9.99 to $12.49 and the twin-pack disappears from shelf." },
+  { id: "r3", name: "\u201CNo compromise\u201D vs \u201CNothing to hide\u201D", type: "Messaging", agents: 320, pos: 142, mix: 121, neg: 57, when: "Jul 31",
+    excerpt: "Two pack-front lines tested against the same product on the same shelf." },
+  { id: "r4", name: "Subscription refill every 6 weeks", type: "Churn", agents: 500, pos: 96, mix: 189, neg: 215, when: "Jul 28",
+    excerpt: "Auto-shipped refill at 15% off, cancellable, charged before it ships." },
+];
+
+const BULK_FILES = [
+  { name: "interview_batch_f_001.docx", size: "18 KB · 2,140 words", turns: 44, mapped: "20 / 20", status: "ready", note: "" },
+  { name: "interview_batch_f_002.docx", size: "22 KB · 2,610 words", turns: 51, mapped: "20 / 20", status: "ready", note: "" },
+  { name: "interview_batch_f_003.vtt", size: "31 KB · timed", turns: 88, mapped: "18 / 20", status: "review", note: "income and household unanswered" },
+  { name: "focus_group_apr.txt", size: "64 KB · 8,900 words", turns: 212, mapped: "—", status: "blocked", note: "6 speakers detected — split before ingest" },
+  { name: "respondents_export.csv", size: "9 KB · 31 rows", turns: 31, mapped: "20 / 20", status: "ready", note: "one agent per row" },
+];
+
+class Component extends DCLogic {
+  state = {
+    screen: "agents", agentQuery: "", selected: [1, 2, 3, 4, 5, 6], selectAllMode: false,
+    activeAgentId: 1, activeRunId: 1, memTab: "all", reflecting: false, reflected: false,
+    scenarioName: "Ammonia-free premium launch", scenarioPrompt: DEFAULT_PROMPT,
+    audience: "all", progressDone: 0, runStage: "simulating", tick: 0, sentFilter: "all",
+    qIndex: 7, answers: SEEDED.slice(), draft: "", intakeMode: "moderated", extracted: 19,
+    scenarioType: null, extraBatches: 0, ingesting: false,
+    ingestOpts: { reflect: true, dedupe: true, skipBlocked: false },
+  };
+
+  componentWillUnmount() { clearInterval(this._t); }
+
+  cohort() { return this.props.cohortSize ?? 500; }
+  concurrency() { return this.props.concurrency ?? 12; }
+
+  runTotal() {
+    const a = this.state.audience;
+    if (a === "all") return this.cohort();
+    if (a === "segment") return Math.round(this.cohort() * 0.256);
+    return this.state.selectAllMode ? this.cohort() : Math.max(1, this.state.selected.length);
+  }
+
+  startRun = () => {
+    clearInterval(this._t);
+    const total = this.runTotal();
+    this.setState({ screen: "running", progressDone: 0, runStage: "simulating", tick: 0 });
+    this._t = setInterval(() => {
+      this.setState((s) => {
+        const done = Math.min(total, s.progressDone + Math.max(1, Math.round(total / 44)));
+        if (done >= total) {
+          clearInterval(this._t);
+          this._t = setTimeout(() => this.setState({ screen: "report" }), 1500);
+          return { progressDone: total, runStage: "aggregating", tick: s.tick + 1 };
+        }
+        return { progressDone: done, tick: s.tick + 1 };
+      });
+    }, 130);
+  };
+
+  runReflect = () => {
+    if (this.state.reflecting) return;
+    this.setState({ reflecting: true });
+    setTimeout(() => this.setState({ reflecting: false, reflected: true, memTab: "reflection" }), 1600);
+  };
+
+  submitAnswer = () => {
+    const text = this.state.draft.trim();
+    if (!text) return;
+    this.setState((s) => ({
+      answers: s.answers.concat(text), qIndex: s.qIndex + 1, draft: "",
+      extracted: s.extracted + (text.length > 90 ? 3 : text.length > 40 ? 2 : 1),
+    }));
+  };
+
+  renderVals() {
+    const s = this.state;
+    const screen = s.screen;
+    const cohort = this.cohort();
+    const conc = this.concurrency();
+
+    const nav = (id) =>
+      "display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; text-align: left; padding: 7px 8px; border: none; border-radius: 5px; font-size: 13px; cursor: pointer; " +
+      ((screen === id
+        || (id === "report" && (screen === "run" || screen === "results"))
+        || (id === "interview" && screen === "bulk")
+        || (id === "agents" && screen === "agent"))
+        ? "background: #E8EFEA; color: #1F4436; font-weight: 600;"
+        : "background: transparent; color: #4A463E; font-weight: 500;");
+
+    // roster
+    const roster = AGENTS.map((a) => ({ id: a.id, name: a.name, interview: a.interview, line1: a.line1, line2: a.line2, segment: a.segment, obs: a.obs, refl: a.refl })).concat(EXTRA);
+    const q = s.agentQuery.trim().toLowerCase();
+    const filtered = roster.filter((a) => !q || (a.name + " " + a.line1 + " " + a.line2 + " " + a.segment).toLowerCase().includes(q));
+    const selSet = new Set(s.selected);
+
+    const visibleAgents = filtered.map((a) => {
+      const on = s.selectAllMode || selSet.has(a.id);
+      return {
+        name: a.name, interview: a.interview, line1: a.line1, line2: a.line2, segment: a.segment,
+        observations: a.obs, reflections: a.refl,
+        check: on ? "\u2713" : "",
+        checkStyle: "width: 16px; height: 16px; border-radius: 3px; display: flex; align-items: center; justify-content: center; cursor: pointer; " +
+          (on ? "background: #1F4436; border: 1px solid #1F4436;" : "background: #FCFBF8; border: 1px solid #C9C4B8;"),
+        open: () => this.setState({ screen: "agent", activeAgentId: a.id, memTab: "all" }),
+        toggle: (e) => {
+          e.stopPropagation();
+          this.setState((st) => {
+            const base = st.selectAllMode ? roster.map((r) => r.id) : st.selected;
+            return { selectAllMode: false, selected: base.includes(a.id) ? base.filter((x) => x !== a.id) : base.concat(a.id) };
+          });
+        },
+      };
+    });
+
+    // agent detail
+    const full = AGENTS.find((a) => a.id === s.activeAgentId);
+    const rosterAgent = roster.find((a) => a.id === s.activeAgentId) || roster[0];
+    const pool = full ? full.mem : [{ id: 9001, c: "Full transcript not loaded for this agent in the prototype.", t: "observation", imp: 5, age: "\u2014" }];
+    const agentMemories = pool
+      .filter((m) => s.memTab === "all" || m.t === s.memTab)
+      .slice().sort((a, b) => b.imp - a.imp)
+      .map((m) => ({
+        id: m.id, content: m.c, memory_type: m.t, importance_score: m.imp, age: m.age,
+        typeStyle: TYPE_PILL[m.t],
+        impStyle: "width: 24px; height: 24px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; " +
+          (m.imp >= 9 ? "background: #1F4436; color: #F7F5F0;" : m.imp >= 7 ? "background: #C3D5C9; color: #1F4436;" : "background: #EDEAE2; color: #8A8377;"),
+      }));
+
+    const memTabs = [["all", "All"], ["observation", "Observations"], ["reflection", "Reflections"], ["plan", "Plans"]].map(([id, label]) => ({
+      label,
+      select: () => this.setState({ memTab: id }),
+      style: "padding: 6px 12px; border-radius: 5px; font-size: 12.5px; cursor: pointer; border: 1px solid " +
+        (s.memTab === id ? "#1F4436; background: #E8EFEA; color: #1F4436; font-weight: 600;" : "#DCD8CE; background: transparent; color: #6E6A60;"),
+    }));
+
+    const totalMem = (rosterAgent.obs + rosterAgent.refl) || 1;
+
+    // scenario
+    const total = this.runTotal();
+    const scenarioTypes = SCENARIO_TYPES.map((t) => ({
+      label: t.label, hint: t.hint,
+      select: () => this.setState({ scenarioType: t.id }),
+      style: "display: flex; flex-direction: column; gap: 4px; align-items: flex-start; padding: 11px 12px; border-radius: 6px; cursor: pointer; text-align: left; border: 1px solid " +
+        ((s.scenarioType ?? (this.props.defaultScenarioType ?? "product")) === t.id ? "#1F4436; background: #E8EFEA;" : "#DCD8CE; background: #FCFBF8;"),
+    }));
+
+    const audienceOptions = [
+      { id: "all", label: "All agents", count: cohort },
+      { id: "selected", label: "Selected", count: s.selectAllMode ? cohort : s.selected.length },
+      { id: "segment", label: "Box-dye loyal", count: Math.round(cohort * 0.256) },
+    ].map((o) => ({
+      label: o.label, count: o.count,
+      select: () => this.setState({ audience: o.id }),
+      style: "display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; text-align: left; padding: 8px 10px; border-radius: 5px; font-size: 12.5px; cursor: pointer; border: 1px solid " +
+        (s.audience === o.id ? "#1F4436; background: #E8EFEA; color: #1F4436; font-weight: 600;" : "#DCD8CE; background: #FCFBF8; color: #4A463E;"),
+    }));
+
+    // running
+    const pct = total ? Math.round((s.progressDone / total) * 100) : 0;
+    const workers = Array.from({ length: conc }, (_, i) => {
+      const active = s.runStage === "simulating" && (s.tick + i) % 4 !== 0 && s.progressDone < total;
+      return { style: "height: 22px; border-radius: 3px; background: " + (active ? "#1F4436" : "#E6E2D9") + "; transition: background 180ms;" };
+    });
+    const names = roster.map((r) => r.name);
+    const ticker = Array.from({ length: 4 }, (_, i) => {
+      const idx = s.tick - i;
+      const secs = Math.max(0, idx * 0.13);
+      return {
+        time: secs.toFixed(1) + "s",
+        text: TICKER[((idx % TICKER.length) + TICKER.length) % TICKER.length] + " · " + names[((idx * 3) % names.length + names.length) % names.length],
+        meta: Math.max(0, Math.min(total, s.progressDone - i)) + "/" + total,
+        style: "display: grid; grid-template-columns: 58px 1fr auto; gap: 12px; align-items: baseline; font-size: 12.5px; opacity: " + (1 - i * 0.24) + ";",
+      };
+    });
+
+    // report
+    const sentTotal = SENT_COUNTS.positive + SENT_COUNTS.mixed + SENT_COUNTS.negative;
+    const sentiments = ["positive", "mixed", "negative"].map((k) => {
+      const n = SENT_COUNTS[k];
+      const p = Math.round((n / sentTotal) * 100);
+      return {
+        label: k, count: n, pctLabel: p + "%",
+        dotStyle: "width: 9px; height: 9px; border-radius: 2px; background: " + SENT[k] + ";",
+        barStyle: "width: " + p + "%; background: " + SENT[k] + "; display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; color: " + (k === "mixed" ? "#2A1B0B" : "#F7F5F0") + ";",
+      };
+    });
+
+    const maxTheme = THEMES[0].n;
+    const themes = THEMES.map((t) => ({ label: t.label, summary: t.summary, agent_count: t.n, pct: Math.round((t.n / maxTheme) * 100) + "%" }));
+
+    const quotes = QUOTES.map((qq) => ({
+      text: qq.text, attrib: qq.attrib,
+      open: () => this.setState({ screen: "run", activeRunId: qq.id }),
+    }));
+
+    const sentimentFilters = [["all", "All"], ["positive", "Positive"], ["mixed", "Mixed"], ["negative", "Negative"]].map(([id, label]) => ({
+      label,
+      select: () => this.setState({ sentFilter: id }),
+      style: "padding: 5px 11px; border-radius: 4px; font-size: 11.5px; cursor: pointer; border: 1px solid " +
+        (s.sentFilter === id ? "#1F4436; background: #E8EFEA; color: #1F4436; font-weight: 600;" : "#DCD8CE; background: transparent; color: #6E6A60;"),
+    }));
+
+    const responseRows = AGENTS
+      .filter((a) => s.sentFilter === "all" || a.sentiment === s.sentFilter)
+      .map((a) => ({
+        name: a.name, meta: a.line1 + " · " + a.segment.toLowerCase(),
+        excerpt: a.response.length > 190 ? a.response.slice(0, 188).trim() + "…" : a.response,
+        memCount: a.mem.length + " mem",
+        railStyle: "width: 3px; min-height: 34px; height: 100%; border-radius: 2px; background: " + SENT[a.sentiment] + ";",
+        open: () => this.setState({ screen: "run", activeRunId: a.id }),
+      }));
+
+    // run detail
+    const run = AGENTS.find((a) => a.id === s.activeRunId) || AGENTS[0];
+    const runMemories = run.mem.map((m) => {
+      const simC = m.sim, recC = m.rec, impC = m.imp / 10;
+      const score = simC + recC + impC;
+      const w = (v) => Math.round((v / score) * 100) + "%";
+      return {
+        id: m.id, content: m.c, memory_type: m.t, importance_score: m.imp, age: m.age,
+        scoreLabel: score.toFixed(2), typeStyle: TYPE_PILL[m.t],
+        simW: w(simC), recW: w(recC), impW: w(impC),
+        breakdown: simC.toFixed(2) + " / " + recC.toFixed(2) + " / " + impC.toFixed(1),
+      };
+    });
+
+    // interview
+    const qi = Math.min(s.qIndex, QUESTIONS.length);
+    const done = s.qIndex >= QUESTIONS.length;
+    const transcript = [];
+    for (let i = 0; i < Math.min(s.answers.length, QUESTIONS.length); i++) {
+      transcript.push({ role: "Interviewer", text: QUESTIONS[i].q, wrapStyle: "display: flex; flex-direction: column; gap: 4px; align-items: flex-start;", roleStyle: "font-size: 10px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: #A8A296;", bubbleStyle: "font-size: 15px; line-height: 1.55; max-width: 88%; text-wrap: pretty;" });
+      transcript.push({ role: "Answer", text: s.answers[i], wrapStyle: "display: flex; flex-direction: column; gap: 4px; align-items: flex-end;", roleStyle: "font-size: 10px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: #7FA891;", bubbleStyle: "font-size: 14px; line-height: 1.55; max-width: 82%; padding: 11px 14px; background: #E8EFEA; border-radius: 10px 10px 2px 10px; color: #16281F; text-wrap: pretty;" });
+    }
+    if (!done) {
+      transcript.push({ role: "Interviewer", text: QUESTIONS[qi].q, wrapStyle: "display: flex; flex-direction: column; gap: 4px; align-items: flex-start;", roleStyle: "font-size: 10px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: #1F4436;", bubbleStyle: "font-size: 17px; line-height: 1.5; max-width: 88%; font-weight: 500; letter-spacing: -0.01em; text-wrap: pretty;" });
+    }
+
+    const cur = done ? null : QUESTIONS[qi];
+    const currentChoices = (cur && cur.choices ? cur.choices : []).map((label) => ({
+      label,
+      pick: () => this.setState((st) => ({ answers: st.answers.concat(label), qIndex: st.qIndex + 1, draft: "", extracted: st.extracted + 1 })),
+    }));
+
+    const sections = SECTIONS.map((sec, i) => {
+      const answeredInSec = QUESTIONS.filter((qq, idx) => qq.s === i && idx < s.answers.length).length;
+      const isCurrent = !done && QUESTIONS[qi].s === i;
+      return {
+        label: sec.label, progress: answeredInSec + "/" + sec.count,
+        style: "display: flex; align-items: center; justify-content: space-between; padding: 5px 0; font-size: 12.5px; color: " +
+          (answeredInSec === sec.count ? "#1F4436" : isCurrent ? "#191A17" : "#A8A296") + ";" + (isCurrent ? " font-weight: 600;" : ""),
+      };
+    });
+
+    const interviewDots = QUESTIONS.map((_, i) => ({
+      style: "width: 5px; height: 14px; border-radius: 2px; background: " +
+        (i < s.answers.length ? "#1F4436" : i === qi ? "#7FA891" : "#DCD8CE") + ";",
+    }));
+
+    const intakeModes = [["self", "Self-serve respondent"], ["moderated", "Researcher transcribing"], ["bulk", "Bulk transcript upload"]].map(([id, label]) => ({
+      label,
+      select: () => this.setState(id === "bulk" ? { intakeMode: id, screen: "bulk" } : { intakeMode: id }),
+      style: "text-align: left; padding: 7px 10px; border-radius: 5px; font-size: 12.5px; cursor: pointer; border: 1px solid " +
+        (s.intakeMode === id ? "#1F4436; background: #E8EFEA; color: #1F4436; font-weight: 600;" : "#DCD8CE; background: #FCFBF8; color: #4A463E;"),
+    }));
+
+    const fmt = (n) => n.toLocaleString("en-US");
+
+    // results index
+    const pastRuns = PAST_RUNS.map((r) => {
+      const t = r.pos + r.mix + r.neg;
+      const p = (n) => Math.round((n / t) * 100) + "%";
+      return {
+        name: r.name, excerpt: r.excerpt, type: r.type, agents: fmt(r.agents), when: r.when,
+        posW: p(r.pos), mixW: p(r.mix), negW: p(r.neg),
+        sentLabel: Math.round((r.pos / t) * 100) + "% pos · " + Math.round((r.neg / t) * 100) + "% neg",
+        open: () => this.setState(r.live ? { screen: "report" } : { screen: "report", scenarioName: r.name, scenarioPrompt: r.excerpt }),
+      };
+    });
+
+    // bulk intake
+    const batchN = s.extraBatches;
+    const bulkFiles = BULK_FILES.concat(
+      Array.from({ length: batchN * 2 }, (_, i) => ({
+        name: "interview_batch_g_" + String(i + 1).padStart(3, "0") + ".docx",
+        size: (16 + ((i * 7) % 12)) + " KB · " + fmt(1900 + ((i * 311) % 900)) + " words",
+        turns: 40 + ((i * 5) % 18), mapped: "20 / 20", status: "ready", note: "",
+      }))
+    );
+    const statusPill = { ready: pill("#E8EFEA", "#1F4436"), review: pill("#F5EADF", "#B25E12"), blocked: pill("#F3E3E0", "#8C3A2E") };
+    const readyCount = bulkFiles.filter((f) => f.status !== "blocked").length + 30;
+    const estMem = readyCount * 24;
+
+    const ingestToggles = [
+      ["reflect", "Run reflect() after ingest"],
+      ["dedupe", "Drop near-duplicate memories"],
+      ["skipBlocked", "Ingest multi-speaker files anyway"],
+    ].map(([id, label]) => {
+      const on = !!s.ingestOpts[id];
+      return {
+        label, check: on ? "\u2713" : "",
+        toggle: () => this.setState((st) => ({ ingestOpts: { ...st.ingestOpts, [id]: !st.ingestOpts[id] } })),
+        style: "display: flex; align-items: flex-start; gap: 9px; width: 100%; padding: 0; border: none; background: none; font-size: 12.5px; color: #4A463E; cursor: pointer;",
+        boxStyle: "width: 15px; height: 15px; border-radius: 3px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 9px; line-height: 1; color: #F7F5F0; " +
+          (on ? "background: #1F4436; border: 1px solid #1F4436;" : "background: #FCFBF8; border: 1px solid #C9C4B8;"),
+      };
+    });
+
+    return {
+      // nav
+      isAgents: screen === "agents", isAgent: screen === "agent", isScenario: screen === "scenario",
+      isRunning: screen === "running", isReport: screen === "report", isRun: screen === "run",
+      isInterview: screen === "interview", isResults: screen === "results", isBulk: screen === "bulk",
+      navAgents: nav("agents"), navInterview: nav("interview"), navScenario: nav("scenario"), navReport: nav("report"),
+      goAgents: () => this.go("agents"), goInterview: () => this.go("interview"),
+      goScenario: () => this.go("scenario"), goReport: () => this.go("report"),
+      goResults: () => this.go("results"),
+
+      pastRuns, bulkFiles: bulkFiles.map((f) => ({ ...f, statusStyle: statusPill[f.status] })),
+      bulkCount: fmt(bulkFiles.length + 30), bulkReady: fmt(readyCount),
+      bulkMemories: "~" + fmt(estMem), bulkEmbedCalls: fmt(readyCount),
+      bulkCost: "$" + (estMem * 0.0009 + readyCount * 0.004).toFixed(2),
+      addBatchLabel: batchN >= 3 ? "No more staged batches" : "Add staged batch",
+      addBatch: () => this.setState((st) => ({ extraBatches: Math.min(3, st.extraBatches + 1) })),
+      ingestToggles,
+      ingestLabel: s.ingesting ? "Ingesting…" : "Ingest " + fmt(readyCount) + " transcripts",
+      ingestBatch: () => {
+        if (this.state.ingesting) return;
+        this.setState({ ingesting: true });
+        setTimeout(() => this.setState({ ingesting: false, screen: "agents" }), 1800);
+      },
+      cohortLabel: fmt(cohort), concurrency: conc,
+      memoryTotal: fmt(Math.round(cohort * 28.4)), reflectionTotal: fmt(Math.round(cohort * 3.9)),
+
+      // agents
+      agentQuery: s.agentQuery,
+      onAgentQuery: (e) => this.setState({ agentQuery: e.target.value }),
+      visibleAgents, visibleCount: filtered.length,
+      selectedLabel: s.selectAllMode ? fmt(cohort) : String(s.selected.length),
+      selectAll: () => this.setState({ selectAllMode: true, selected: [] }),
+      clearSelection: () => this.setState({ selectAllMode: false, selected: [] }),
+
+      // agent detail
+      agentName: rosterAgent.name, agentChips: full ? full.chips : [rosterAgent.line1, rosterAgent.line2, rosterAgent.segment],
+      agentMemories, memTabs,
+      agentObs: rosterAgent.obs, agentRefl: rosterAgent.refl + (s.reflected && full && full.id === 1 ? 4 : 0),
+      agentMeanImp: full ? full.meanImp : "—",
+      obsPct: Math.round((rosterAgent.obs / totalMem) * 100) + "%",
+      reflPct: Math.round((rosterAgent.refl / totalMem) * 100) + "%",
+      agentInterview: "Interview " + rosterAgent.interview,
+      agentIntakeMode: full ? full.intake : "Bulk transcript upload",
+      agentCreatedAt: "Created " + (full ? full.created : "Jul 26, 2026"),
+      agentRunLabel: s.scenarioName + " →",
+      openRunForAgent: () => this.setState({ screen: "run", activeRunId: full ? full.id : 1 }),
+      reflectLabel: s.reflecting ? "Synthesizing…" : "Run reflection",
+      runReflect: this.runReflect,
+
+      // scenario
+      scenarioTypes, audienceOptions,
+      scenarioName: s.scenarioName, scenarioPrompt: s.scenarioPrompt,
+      onScenarioName: (e) => this.setState({ scenarioName: e.target.value }),
+      onScenarioPrompt: (e) => this.setState({ scenarioPrompt: e.target.value }),
+      promptChars: s.scenarioPrompt.length + " chars",
+      runCount: fmt(total), estCalls: fmt(total * 2 + 1),
+      estTime: Math.max(1, Math.round((total * 2.2) / conc)) + "s",
+      estCost: "$" + (total * 0.011 + 0.04).toFixed(2),
+      startRun: this.startRun,
+
+      // running
+      progressDone: fmt(s.progressDone), progressTotal: fmt(total),
+      progressPct: pct + "%", workers, ticker,
+      runStageLabel: s.runStage === "aggregating" ? "Aggregating responses" : "Simulating",
+      progressRate: s.runStage === "aggregating" ? "all responses stored" : Math.round(conc / 2.2 * 10) / 10 + " agents/sec",
+      progressEta: s.runStage === "aggregating" ? "one aggregation call" : Math.max(0, Math.round(((total - s.progressDone) * 2.2) / conc)) + "s remaining",
+
+      // report
+      sentiments, themes, quotes, sentimentFilters, responseRows,
+      reportRunLine: fmt(total) + " agents · 0 failed",
+      reportTimeLine: Math.max(1, Math.round((total * 2.2) / conc)) + "s wall clock",
+      reportCostLine: "$" + (total * 0.011 + 0.04).toFixed(2) + " · " + fmt(total * 2 + 1) + " calls",
+
+      // run detail
+      runName: run.name, runMeta: run.line1 + " · " + run.line2, runResponse: run.response,
+      runPersonaLines: run.persona, runTokenLine: run.tokens, runMemories,
+      runSentiment: run.sentiment,
+      runSentStyle: pill(run.sentiment === "mixed" ? "#F5EADF" : run.sentiment === "negative" ? "#F3E3E0" : "#E8EFEA", SENT[run.sentiment]),
+      openAgentFromRun: () => this.setState({ screen: "agent", activeAgentId: run.id, memTab: "all" }),
+      showScoreMath: this.props.showScoreMath ?? true,
+
+      // interview
+      transcript, currentChoices, hasChoices: currentChoices.length > 0,
+      sections, interviewDots, intakeModes,
+      interviewCounter: Math.min(s.answers.length + (done ? 0 : 1), QUESTIONS.length) + " / " + QUESTIONS.length,
+      interviewActive: !done, interviewDone: done,
+      draft: s.draft,
+      onDraft: (e) => this.setState({ draft: e.target.value }),
+      onDraftKey: (e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); this.submitAnswer(); } },
+      submitAnswer: this.submitAnswer,
+      submitLabel: s.qIndex >= QUESTIONS.length - 1 ? "Finish" : "Next",
+      inputHint: cur && cur.hint ? cur.hint : "Type your answer — ⌘↵ to send",
+      extractedCount: fmt(s.extracted), extractedPreview: EXTRACTS,
+      intakeHeadline: "Agent created from 20 answers",
+      intakeSteps: [
+        "POST /agents/from-interview · 201",
+        s.extracted + " observation memories embedded",
+        s.extracted + " importance scores returned",
+        "reflect() synthesized 4 reflections",
+      ],
+      openNewAgent: () => this.setState({ screen: "agent", activeAgentId: 1, memTab: "all" }),
+      resetInterview: () => this.setState({ qIndex: 7, answers: SEEDED.slice(), draft: "", extracted: 19 }),
+    };
+  }
+
+  go = (screen) => this.setState({ screen });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+.env
+.env.local
+.DS_Store
+
+# python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+
+# node
+node_modules/
+.next/
+tsconfig.tsbuildinfo
+npm-debug.log*
+
+# editors
+.vscode/
+.idea/
